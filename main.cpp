@@ -1,8 +1,18 @@
 ﻿#include <iostream>
 #include <vector>
 #include <string_view>
+#include <fstream>
 #include "lodepng.h"
+#include <cstring>
+#include <mutex>
+#include <random>
+#include <thread>
+#define MAX_THREAD 4
+
 using namespace std;
+
+std::mutex myMutex;
+
 
 std::vector<unsigned char> decode(string_view filename,
     unsigned int& width, unsigned int& height) {
@@ -15,23 +25,113 @@ std::vector<unsigned char> decode(string_view filename,
     return result;
 }
 
-void encode(string_view filename, std::vector<unsigned char>& image, unsigned width, unsigned height) {
-    unsigned error = lodepng::encode(filename.data(), image, width, height);
-    if (error) {
-        std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+
+void encode_filter_red(string_view filename, std::vector<unsigned char>& image, unsigned width,unsigned h, unsigned height) {
+    for (size_t i = h; i < height; i++) {
+        for (size_t j = 0; j < width * 4; j += 4) {
+            image[i * width * 4 + j + 0]; // Red component
+            image[i * width * 4 + j + 1]=0; // Green component
+            image[i * width * 4 + j + 2]=0; // Blue component
+            image[i * width * 4 + j + 3]; // Alpha component
+
+        }
+
+        unsigned error = lodepng::encode(filename.data(), image, width, height);
+        if (error) {
+            std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+        }
     }
 }
 
+void encode_filter_tr(string_view filename, std::vector<unsigned char>& image, unsigned width, unsigned height) {
+    unsigned int h1 = (height/4);
+    unsigned int h2 = (height/2);
+    unsigned int h3 = ((3*height)/4);
+    thread t1(encode_filter_red,filename,std::ref(image),width,0,h1);
+    thread t2(encode_filter_red,filename,std::ref(image),width,h1,h2);
+    thread t3(encode_filter_red,filename,std::ref(image),width,h2,h3);
+    thread t4(encode_filter_red,filename,std::ref(image),width,h3,height);
+    t1.join(); t2.join(); t3.join(); t4.join();
+
+}
+
+void encode_filter_green(string_view filename, std::vector<unsigned char>& image, unsigned width,unsigned h, unsigned height) {
+    for (size_t i = h; i < height; i++) {
+        for (size_t j = 0; j < width * 4; j += 4) {
+            image[i * width * 4 + j + 0]=0; // Red component
+            image[i * width * 4 + j + 1]; // Green component
+            image[i * width * 4 + j + 2]=0; // Blue component
+            image[i * width * 4 + j + 3]; // Alpha component
+
+        }
+
+        unsigned error = lodepng::encode(filename.data(), image, width, height);
+        if (error) {
+            std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+        }
+    }
+}
+void encode_filter_tg(string_view filename, std::vector<unsigned char>& image, unsigned width, unsigned height) {
+    unsigned int h1 = (height/4);
+    unsigned int h2 = (height/2);
+    unsigned int h3 = ((3*height)/4);
+    thread t1(encode_filter_green,filename,std::ref(image),width,0,h1);
+    thread t2(encode_filter_green,filename,std::ref(image),width,h1,h2);
+    thread t3(encode_filter_green,filename,std::ref(image),width,h2,h3);
+    thread t4(encode_filter_green,filename,std::ref(image),width,h3,height);
+    t1.join(); t2.join(); t3.join(); t4.join();
+
+}
+
+
+
+void encode_filter_blue(string_view filename, std::vector<unsigned char>& image, unsigned width,unsigned h, unsigned height) {
+
+    for (size_t i = h; i < height; i++) {
+        for (size_t j = 0; j < width * 4; j += 4) {
+            image[i * width * 4 + j + 0]=0; // Red component
+            image[i * width * 4 + j + 1]=0; // Green component
+            image[i * width * 4 + j + 2]; // Blue component
+            image[i * width * 4 + j + 3]; // Alpha component
+
+        }
+
+        unsigned error = lodepng::encode(filename.data(), image, width, height);
+        if (error) {
+            std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+        }
+    }
+}
+
+void encode_filter_tb(string_view filename, std::vector<unsigned char>& image, unsigned width, unsigned height) {
+    unsigned int h1 = (height/4);
+    unsigned int h2 = (height/2);
+    unsigned int h3 = ((3*height)/4);
+    thread t1(encode_filter_blue,filename,std::ref(image),width,0,h1);
+    thread t2(encode_filter_blue,filename,std::ref(image),width,h1,h2);
+    thread t3(encode_filter_blue,filename,std::ref(image),width,h2,h3);
+    thread t4(encode_filter_blue,filename,std::ref(image),width,h3,height);
+    t1.join(); t2.join(); t3.join(); t4.join();
+
+}
+
+
+
+
+
 int main()
 {
+
     unsigned int w;
     unsigned int h;
-    auto image = decode("../in.png", w, h);
+    string path="../in.png";
+    ifstream input1(path);
+    auto image = decode(path, w, h);
     // Un comment if you want to check buffer content
     for (size_t i = 0; i < h; i++) {
         for (size_t j = 0; j < w * 4; j += 4) {
-            int r = image[i * w * 4 + j + 0]; // Red component
-            int g = image[i * w * 4 + j + 1]; // Green component
+            int r = image[0*(i * w * 4 + j + 0)]; // Red component
+            int g = image[(i * w * 4 + j + 1)*0]; // Green component
             int b = image[i * w * 4 + j + 2]; // Blue component
             int a = image[i * w * 4 + j + 3]; // Alpha component
             std::cout << r << " ";
@@ -41,6 +141,15 @@ int main()
         }
         std::cout << endl;
     }
-    encode("../out.png", image, w, h);
+
+    //encode_filter_red("../out2.png", image, w, h);
+    //encode_filter_green("../out3.png", image, w, h);
+    //encode_filter_blue("../out4.png", image, w, h);
+
+    encode_filter_tr("../out4.png", image, w, h);
+    //encode_filter_tg("../out4.png", image, w, h);
+    //encode_filter_tb("../out4.png", image, w, h);
     return 0;
-}
+
+
+};

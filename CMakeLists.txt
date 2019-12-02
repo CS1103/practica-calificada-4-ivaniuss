@@ -11,4 +11,11 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wpedantic -Wextra")
 endif()
 
+set(OpenCV_DIR "C:\\Users\\Ivan Mamani\\Downloads\\opencv\\build")
+find_package(OpenCV REQUIRED)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(SOURCE_FILES main.cpp)
+
 add_executable (pc4 main.cpp lodepng.cpp lodepng.h)
