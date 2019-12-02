@@ -12,8 +12,25 @@ else()
 endif()
 
 set(OpenCV_DIR "C:\\Users\\Ivan Mamani\\Downloads\\opencv\\build")
+
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+include_directories("C:\\Users\\Ivan Mamani\\Downloads\\opencv\\build\\include")
 find_package(OpenCV REQUIRED)
 
+# If the package has been found, several variables will
+# be set, you can find the full list with descriptions
+# in the OpenCVConfig.cmake file.
+# Print some message showing some of them
+message(STATUS "OpenCV library status:")
+message(STATUS "    version: ${OpenCV_VERSION}")
+message(STATUS "    libraries: ${OpenCV_LIBS}")
+message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
+if(CMAKE_VERSION VERSION_LESS "2.8.11")
+    # Add OpenCV headers location to your include paths
+    include_directories(${OpenCV_INCLUDE_DIRS})
+endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(SOURCE_FILES main.cpp)

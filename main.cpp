@@ -7,10 +7,16 @@
 #include <mutex>
 #include <random>
 #include <thread>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <math.h>
 #define MAX_THREAD 4
 
+#define PI 3.14159265
 using namespace std;
 
+using namespace cv;
 std::mutex myMutex;
 
 
@@ -114,7 +120,22 @@ void encode_filter_tb(string_view filename, std::vector<unsigned char>& image, u
     t1.join(); t2.join(); t3.join(); t4.join();
 
 }
-
+template <typename T, typename  P>
+void rotar_Imagen(string_view filename, vector<T> imagen, P width, P height) {
+    vector<unsigned char> temporal;
+    for (size_t i = 0; i < height; i++) {
+        for (size_t j = 0; j < width * 4; j += 4) {
+            temporal.push_back(imagen[(i * width * 4 + j + 0) * cos(45)]); // Red component
+            temporal.push_back(imagen[(i * width * 4 + j + 1) * cos(45)]); // Green component
+            temporal.push_back(imagen[(i * width * 4 + j + 2) * cos(45)]); // Blue component
+            temporal.push_back(imagen[(i * width * 4 + j + 3) * sin(45)]); // Opacidad
+        }
+    }
+    unsigned error = lodepng::encode(filename.data(), imagen, width, height);
+    if (error) {
+        cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+    }
+}
 
 
 
@@ -128,7 +149,7 @@ int main()
     ifstream input1(path);
     auto image = decode(path, w, h);
     // Un comment if you want to check buffer content
-    for (size_t i = 0; i < h; i++) {
+    /*for (size_t i = 0; i < h; i++) {
         for (size_t j = 0; j < w * 4; j += 4) {
             int r = image[0*(i * w * 4 + j + 0)]; // Red component
             int g = image[(i * w * 4 + j + 1)*0]; // Green component
@@ -141,14 +162,19 @@ int main()
         }
         std::cout << endl;
     }
-
+*/
     //encode_filter_red("../out2.png", image, w, h);
     //encode_filter_green("../out3.png", image, w, h);
     //encode_filter_blue("../out4.png", image, w, h);
 
-    encode_filter_tr("../out4.png", image, w, h);
+    //encode_filter_tr("../out4.png", image, w, h);
     //encode_filter_tg("../out4.png", image, w, h);
     //encode_filter_tb("../out4.png", image, w, h);
+
+    rotar_Imagen("../rotated.png",image,w,h);
+
+
+
     return 0;
 
 
