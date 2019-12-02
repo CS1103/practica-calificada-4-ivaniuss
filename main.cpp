@@ -120,8 +120,8 @@ void encode_filter_tb(string_view filename, std::vector<unsigned char>& image, u
     t1.join(); t2.join(); t3.join(); t4.join();
 
 }
-template <typename T, typename  P>
-void rotar_Imagen(string_view filename, vector<T> imagen, P width, P height) {
+template <typename T, typename  T1>
+void rotar_Imagen(string_view filename, vector<T> imagen, T1 width, T1 height) {
     vector<unsigned char> temporal;
     for (size_t i = 0; i < height; i++) {
         for (size_t j = 0; j < width * 4; j += 4) {
@@ -163,12 +163,9 @@ int main()
         std::cout << endl;
     }
 */
-    //encode_filter_red("../out2.png", image, w, h);
-    //encode_filter_green("../out3.png", image, w, h);
-    //encode_filter_blue("../out4.png", image, w, h);
 
-    //encode_filter_tr("../out4.png", image, w, h);
-    //encode_filter_tg("../out4.png", image, w, h);
+    encode_filter_tr("../out4.png", image, w, h);
+    encode_filter_tg("../out4.png", image, w, h);
     //encode_filter_tb("../out4.png", image, w, h);
 
     rotar_Imagen("../rotated.png",image,w,h);
